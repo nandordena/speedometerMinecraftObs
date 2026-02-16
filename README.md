@@ -4,7 +4,7 @@
 - **2. Abrir una terminal** (PowerShell o CMD) en la carpeta del proyecto:
 
   ```bash
-  cd C:\Users\hw1na\GH\speedometerMinecraftObs
+  cd C:\......\speedometerMinecraftObs
   ```
 
 - **3. Instalar dependencias** (solo la primera vez):
@@ -55,7 +55,7 @@ Más adelante se podrán añadir otras funciones (cálculo de velocidad, exporta
 2. En una terminal (PowerShell o CMD), ir a la carpeta del proyecto:
 
 ```bash
-cd C:\Users\hw1na\GH\speedometerMinecraftObs
+cd C:\......\speedometerMinecraftObs
 ```
 
 3. Instalar dependencias:

@@ -289,6 +289,8 @@
 
       const MAX_SPEED_GUESS = 30; // bloques/segundo (valor visual aproximado)
 
+      let currentDirection = null; // direction desde setup.json
+
       function setStatus(type, message) {
         const dotClass =
           type === "ok" ? "status-dot ok" : type === "error" ? "status-dot error" : "status-dot";
@@ -344,9 +346,23 @@
         return entries;
       }
 
-      function computeSpeeds(entries) {
+      function computeSpeeds(entries, direction) {
         if (!entries || entries.length < 2) {
           return { current: null, average: null };
+        }
+
+        const dir = (direction || "").toLowerCase();
+        const useZ = dir === "north" || dir === "south";
+        const useX = dir === "east" || dir === "west" || dir === "est";
+
+        function distanciaSegunDireccion(a, b) {
+          if (useZ) {
+            return Math.abs(b.z - a.z);
+          }
+          if (useX) {
+            return Math.abs(b.x - a.x);
+          }
+          return distancia3D(a, b);
         }
 
         const last = entries[entries.length - 1];
@@ -355,7 +371,7 @@
         const dtLast = (last.ts - prev.ts) / 1000;
         let current = null;
         if (dtLast > 0) {
-          const distLast = distancia3D(prev, last);
+          const distLast = distanciaSegunDireccion(prev, last);
           current = distLast / dtLast;
         }
 
@@ -367,7 +383,7 @@
           for (let i = 1; i < entries.length; i++) {
             const a = entries[i - 1];
             const b = entries[i];
-            totalDist += distancia3D(a, b);
+            totalDist += distanciaSegunDireccion(a, b);
           }
           average = totalDist / totalTime;
         }
@@ -403,7 +419,7 @@
           return;
         }
 
-        const { current, average } = computeSpeeds(entries);
+        const { current, average } = computeSpeeds(entries, currentDirection);
 
         if (current == null) {
           speedValueEl.textContent = "--";
@@ -437,6 +453,7 @@
           const intervalMs = Number(cfg.intervalLog ?? 60000);
           const savename = cfg.savename;
           const username = cfg.username;
+          currentDirection = (cfg.direction || "").toLowerCase();
 
           // Mostramos solo información genérica, sin datos concretos de mundo/jugador
           subtitleEl.textContent = "Velocímetro activo";
