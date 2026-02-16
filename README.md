@@ -1,3 +1,7 @@
+# Speedometer Minecraft OBS (capturador de posición)
+Este proyecto es un capturador externo que lee los datos del jugador desde los archivos `.dat` de Minecraft Java y genera logs que luego se pueden usar para construir un velocímetro u otros overlays en OBS.
+![imagen de muestra](https://i.ibb.co/qYhXBL6b/image.png)
+
 ## Cómo usar (resumen rápido)
 
 - **1. Instalar Node.js** (si aún no lo tienes) desde la web oficial.
@@ -28,9 +32,7 @@
 
 ---
 
-## Speedometer Minecraft OBS (capturador de posición)
-
-Este proyecto es un capturador externo que lee los datos del jugador desde los archivos `.dat` de Minecraft Java y genera logs que luego se pueden usar para construir un velocímetro u otros overlays en OBS.
+## Información técnica
 
 De momento el sistema:
 - Lee el archivo `.dat` del jugador configurado.
