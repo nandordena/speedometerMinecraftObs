@@ -1,0 +1,24 @@
+{
+  "name": "speedometer-minecraft-obs",
+  "version": "1.0.0",
+  "description": "Herramienta para leer archivos .dat de Minecraft (datos de usuario) para speedometer / overlays.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "leer:userdat": "node ./datReader/readUserDat.js",
+    "start:capture": "node ./startCapture.js"
+  },
+  "keywords": [
+    "minecraft",
+    "nbt",
+    "dat",
+    "obs",
+    "overlay"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "prismarine-nbt": "^2.7.0"
+  }
+}
+

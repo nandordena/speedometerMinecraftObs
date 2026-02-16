@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Speedometer Minecraft OBS</title>
+    <style>
+      :root {
+        --bg: #00000000;
+        --card-bg: #0b1120;
+        --accent: #22c55e;
+        --accent-soft: rgba(34, 197, 94, 0.2);
+        --accent-avg: #38bdf8;
+        --accent-avg-soft: rgba(56, 189, 248, 0.2);
+        --text-main: #e5e7eb;
+        --text-muted: #9ca3af;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: #00000000;
+        color: var(--text-main);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.8);
+        min-width: 320px;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #ffffff;
+      }
+
+      .subtitle {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .gauges {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .gauge-card {
+        background: var(--card-bg);
+        border-radius: 0.9rem;
+        padding: 1rem 1.1rem 0.9rem;
+        border: 1px solid rgba(55, 65, 81, 0.9);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .gauge-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at top,
+          rgba(34, 197, 94, 0.14),
+          transparent 55%
+        );
+        opacity: 0.4;
+        pointer-events: none;
+      }
+
+      .gauge-card.avg::before {
+        background: radial-gradient(
+          circle at top,
+          rgba(56, 189, 248, 0.18),
+          transparent 55%
+        );
+      }
+
+      .gauge-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.6rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .gauge-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #ffffff;
+      }
+
+      .badge {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        color: var(--text-muted);
+      }
+
+      .gauge-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .value {
+        font-size: 2.3rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #ffffff;
+      }
+
+      .unit {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: #ffffff;
+      }
+
+      .meter {
+        flex: 1;
+        height: 0.55rem;
+        border-radius: 999px;
+        background: radial-gradient(circle at top left, #020617, #020617);
+        border: 1px solid rgba(31, 41, 55, 0.9);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .meter-fill {
+        position: absolute;
+        inset: 0;
+        transform-origin: left center;
+        transform: scaleX(0);
+        transition: transform 0.2s ease-out;
+      }
+
+      .meter-fill.current {
+        background: linear-gradient(
+          90deg,
+          var(--accent-soft),
+          var(--accent),
+          #facc15
+        );
+      }
+
+      .meter-fill.avg {
+        background: linear-gradient(
+          90deg,
+          var(--accent-avg-soft),
+          var(--accent-avg),
+          #a855f7
+        );
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.4rem;
+      }
+
+      .status-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        margin-right: 0.3rem;
+        display: inline-block;
+        vertical-align: middle;
+        background: #f97316;
+        box-shadow: 0 0 8px rgba(248, 113, 113, 0.9);
+      }
+
+      .status-dot.ok {
+        background: #22c55e;
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+      }
+
+      .status-dot.error {
+        background: #ef4444;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="title">Minecraft Speedometer</div>
+        <div class="subtitle" id="subtitle">
+          Cargando configuración...
+        </div>
+      </div>
+
+      <div class="gauges">
+        <div class="gauge-card" id="gauge-current">
+          <div class="gauge-header">
+            <div class="gauge-title">Velocidad actual</div>
+            <div class="badge" id="interval-label">-- ms</div>
+          </div>
+          <div class="gauge-main">
+            <div>
+              <div class="value" id="speed-value">--</div>
+              <div class="unit">bloques / segundo</div>
+            </div>
+            <div class="meter">
+              <div
+                class="meter-fill current"
+                id="speed-meter-fill"
+                style="transform: scaleX(0);"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gauge-card avg" id="gauge-avg">
+          <div class="gauge-header">
+            <div class="gauge-title">Velocidad media</div>
+            <div class="badge">sesión</div>
+          </div>
+          <div class="gauge-main">
+            <div>
+              <div class="value" id="speed-avg-value">--</div>
+              <div class="unit">bloques / segundo</div>
+            </div>
+            <div class="meter">
+              <div
+                class="meter-fill avg"
+                id="speed-avg-meter-fill"
+                style="transform: scaleX(0);"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div id="status">
+          <span class="status-dot"></span>
+          Sin datos
+        </div>
+        <div id="last-update">Última actualización: --</div>
+      </div>
+    </div>
+
+    <script>
+      const subtitleEl = document.getElementById("subtitle");
+      const intervalLabelEl = document.getElementById("interval-label");
+      const speedValueEl = document.getElementById("speed-value");
+      const speedAvgValueEl = document.getElementById("speed-avg-value");
+      const speedMeterFillEl = document.getElementById("speed-meter-fill");
+      const speedAvgMeterFillEl = document.getElementById(
+        "speed-avg-meter-fill"
+      );
+      const statusEl = document.getElementById("status");
+      const lastUpdateEl = document.getElementById("last-update");
+
+      const MAX_SPEED_GUESS = 30; // bloques/segundo (valor visual aproximado)
+
+      function setStatus(type, message) {
+        const dotClass =
+          type === "ok" ? "status-dot ok" : type === "error" ? "status-dot error" : "status-dot";
+        statusEl.innerHTML = `<span class="${dotClass}"></span>${message}`;
+      }
+
+      function parseFecha(fechaStr) {
+        // Formato esperado: "AAAA-MM-DD HH:mm:ss"
+        const [datePart, timePart] = fechaStr.trim().split(" ");
+        if (!datePart || !timePart) return null;
+        const [y, m, d] = datePart.split("-").map((v) => parseInt(v, 10));
+        const [hh, mm, ss] = timePart.split(":").map((v) => parseInt(v, 10));
+        if (
+          !Number.isFinite(y) ||
+          !Number.isFinite(m) ||
+          !Number.isFinite(d) ||
+          !Number.isFinite(hh) ||
+          !Number.isFinite(mm) ||
+          !Number.isFinite(ss)
+        ) {
+          return null;
+        }
+        return new Date(y, m - 1, d, hh, mm, ss);
+      }
+
+      function distancia3D(a, b) {
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dz = b.z - a.z;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+      }
+
+      function parseLogLines(text) {
+        const lines = text
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+
+        const entries = [];
+        for (const line of lines) {
+          const parts = line.split(";");
+          if (parts.length < 4) continue;
+          const [tsStr, xStr, yStr, zStr] = parts;
+          const ts = parseFecha(tsStr);
+          const x = Number(xStr);
+          const y = Number(yStr);
+          const z = Number(zStr);
+          if (!ts || !Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+            continue;
+          }
+          entries.push({ ts, x, y, z });
+        }
+        return entries;
+      }
+
+      function computeSpeeds(entries) {
+        if (!entries || entries.length < 2) {
+          return { current: null, average: null };
+        }
+
+        const last = entries[entries.length - 1];
+        const prev = entries[entries.length - 2];
+
+        const dtLast = (last.ts - prev.ts) / 1000;
+        let current = null;
+        if (dtLast > 0) {
+          const distLast = distancia3D(prev, last);
+          current = distLast / dtLast;
+        }
+
+        const first = entries[0];
+        const totalTime = (last.ts - first.ts) / 1000;
+        let average = null;
+        if (totalTime > 0) {
+          let totalDist = 0;
+          for (let i = 1; i < entries.length; i++) {
+            const a = entries[i - 1];
+            const b = entries[i];
+            totalDist += distancia3D(a, b);
+          }
+          average = totalDist / totalTime;
+        }
+
+        return { current, average };
+      }
+
+      async function loadConfig() {
+        const res = await fetch("setup.json");
+        if (!res.ok) {
+          throw new Error("No se pudo cargar setup.json");
+        }
+        const cfg = await res.json();
+        return cfg;
+      }
+
+      async function loadLog(logPath) {
+        const res = await fetch(`${logPath}?t=${Date.now()}`);
+        if (!res.ok) {
+          throw new Error("No se pudo cargar el log de usuario");
+        }
+        const text = await res.text();
+        return text;
+      }
+
+      function updateUIFromEntries(entries) {
+        if (!entries || entries.length === 0) {
+          speedValueEl.textContent = "--";
+          speedAvgValueEl.textContent = "--";
+          speedMeterFillEl.style.transform = "scaleX(0)";
+          speedAvgMeterFillEl.style.transform = "scaleX(0)";
+          setStatus("warn", "Sin datos suficientes en el log");
+          return;
+        }
+
+        const { current, average } = computeSpeeds(entries);
+
+        if (current == null) {
+          speedValueEl.textContent = "--";
+          speedMeterFillEl.style.transform = "scaleX(0)";
+        } else {
+          const c = Math.max(0, current);
+          speedValueEl.textContent = c.toFixed(2);
+          const frac = Math.max(0, Math.min(1, c / MAX_SPEED_GUESS));
+          speedMeterFillEl.style.transform = `scaleX(${frac})`;
+        }
+
+        if (average == null) {
+          speedAvgValueEl.textContent = "--";
+          speedAvgMeterFillEl.style.transform = "scaleX(0)";
+        } else {
+          const a = Math.max(0, average);
+          speedAvgValueEl.textContent = a.toFixed(2);
+          const fracAvg = Math.max(0, Math.min(1, a / MAX_SPEED_GUESS));
+          speedAvgMeterFillEl.style.transform = `scaleX(${fracAvg})`;
+        }
+
+        setStatus("ok", "Datos actualizados");
+        const now = new Date();
+        lastUpdateEl.textContent =
+          "Última actualización: " + now.toLocaleTimeString("es-ES");
+      }
+
+      async function init() {
+        try {
+          const cfg = await loadConfig();
+          const intervalMs = Number(cfg.intervalLog ?? 60000);
+          const savename = cfg.savename;
+          const username = cfg.username;
+
+          // Mostramos solo información genérica, sin datos concretos de mundo/jugador
+          subtitleEl.textContent = "Velocímetro activo";
+          intervalLabelEl.textContent = `${intervalMs} ms`;
+
+          const logPath = `userlog/${savename}_${username}.csv`;
+
+          async function tick() {
+            try {
+              const text = await loadLog(logPath);
+              const entries = parseLogLines(text);
+              if (entries.length === 0) {
+                setStatus("warn", "Log vacío o sin formato válido");
+                return;
+              }
+              updateUIFromEntries(entries);
+            } catch (err) {
+              console.error(err);
+              setStatus("error", err.message || "Error al leer datos");
+            }
+          }
+
+          // Primera lectura inmediata
+          await tick();
+
+          // Actualizaciones periódicas
+          const safeInterval =
+            Number.isFinite(intervalMs) && intervalMs > 0 ? intervalMs : 60000;
+          setInterval(tick, safeInterval);
+        } catch (err) {
+          console.error(err);
+          setStatus("error", err.message || "Error de inicialización");
+          subtitleEl.textContent = "Error cargando configuración";
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
