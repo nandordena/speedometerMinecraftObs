@@ -4,7 +4,8 @@ Este proyecto es un capturador externo que lee los datos del jugador desde los a
 
 ## Cómo usar (resumen rápido)
 
-- **1. Instalar Node.js** (si aún no lo tienes) desde la web oficial.
+- **1. Instalar Node.js** (si aún no lo tienes) desde la [web oficial](https://nodejs.org/es/download).
+ "versión pre compilada de Node.js®"
 - **2. Abrir una terminal** (PowerShell o CMD) en la carpeta del proyecto:
 
   ```bash
@@ -30,6 +31,12 @@ Este proyecto es un capturador externo que lee los datos del jugador desde los a
   - El velocímetro se verá en: `http://localhost:3000/speedometer.html`  
     (puedes usar esa URL como fuente de navegador en OBS).
 
+- **Listo!** 
+Ahora cada vez que quieras iniciar el velosimetro solo tienes que iniciarlo con :
+  ```bash
+  npm run start:capture
+  ```
+- recuerda que esto genera un scv (exel) para ver tus registros en `./speedometerMinecraftObs/userlog'`
 ---
 
 ## Información técnica
